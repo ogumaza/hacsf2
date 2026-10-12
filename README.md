@@ -37,15 +37,14 @@ on Windows and macOS. The same applies to a sequence named `samples`. That name 
 collide with the SFZ sample folder. The default output folder is `<archive name>_hacsf2`, and
 the same rules apply to its name. Use `--output` to choose another location.
 
-hacsf2 is the Switch counterpart of cafesf2 (Wii U) and citrusf2 (3DS). Switch games use
-nn::atk, the successor of the Wii U's sound library, nw::snd. hacsf2 plays sequences as
-cafesf2 does. The Switch's timing, audio renderer and arithmetic come from the executable of
-WarioWare: Get It Together!.
+Switch games use nn::atk, the successor of the Wii U's sound library, nw::snd. hacsf2 plays
+each sequence the way nn::atk does. The Switch's timing, audio renderer and arithmetic come
+from the executable of WarioWare: Get It Together!.
 
 ## Downloads
 
-The Releases page has hacsf2 for 64-bit Windows. On macOS and Linux, build it from source
-(see [Building](#building)).
+The Releases page has hacsf2 for 64-bit Windows. On macOS on Apple Silicon, build it from
+source (see [Building](#building)).
 
 ## Drag and drop
 
@@ -87,30 +86,31 @@ controllers. The performer follows the Switch's nn::atk player, including:
   depend on timing.
 - Main-loop detection and MIDI loop markers. The main loop belongs to the lowest-numbered track
   that can still advance. A pass qualifies only if earlier tracks make no contribution. Tracks
-  waiting forever on held notes do not block this choice. A pass that changes nothing, such as
-  one that only polls or counts a variable, qualifies only while no other track changes the
-  sound or plays on. Setting a variable that another track reads counts as a change. A track
-  that has sounded nothing and changed nothing for 10 seconds doesn't count as playing on. A
-  sequence whose tracks all reach their end has no main loop. Backward jumps to unvisited
-  commands and passes without waits, such as random retries or variable polling, are not loops.
-  Inside a subroutine, a jump back isn't a loop when its pass played no note that can be heard
-  and ran a conditional jump, call, return or end that could leave the loop. A tie or mono
-  legato on a note below hearing (see below) plays nothing that can be heard. A held note that
-  sounds until the game stops it keeps such a loop. A main loop in which no note starts isn't a
-  loop either once every earlier note has ended or is fading out. The sequence then ends with
-  its last sound. The markers go on the first pass that a player looping on them repeats as the
-  game plays the next one: the same notes at the same times, with the same settings and tempo.
-  The first pass often differs. Setup before the loop can land in its first tick. The game can
-  keep a value from pass to pass. Later passes may only tie again a note that the first pass
-  strikes. If no pass so far repeats that way but the next pass does, the performance plays that
-  pass too. Otherwise the markers stay on the first pass. They also stay there in a loop that
-  draws random numbers. At the loop's start, the MIDI file sends each controller, pitch, preset
-  and tempo that the game gives back there when the loop ends with another value. Without those
-  events, a player that loops on the markers would keep the value from the loop's end.
+  that wait forever, on held notes or for a negative number of ticks, do not block this choice.
+  A pass that changes nothing, such as one that only polls or counts a variable, qualifies only
+  while no other track changes the sound or plays on. Setting a variable that another track
+  reads counts as a change. A track that has sounded nothing and changed nothing for 10 seconds
+  doesn't count as playing on. A sequence whose tracks all reach their end has no main loop.
+  Backward jumps to unvisited commands and passes without waits, such as random retries or
+  variable polling, are not loops. Inside a subroutine, a jump back isn't a loop when its pass
+  played no note that can be heard and ran a conditional jump, call, return or end that could
+  leave the loop. A tie or mono legato on a note below hearing (see below) plays nothing that
+  can be heard. A held note that sounds until the game stops it keeps such a loop. A main loop
+  in which no note starts isn't a loop either once every earlier note has ended or is fading
+  out. The sequence then ends with its last sound. The markers go on the first pass that a
+  player looping on them repeats as the game plays the next one: the same notes at the same
+  times, with the same settings and tempo. The first pass often differs. Setup before the loop
+  can land in its first tick. The game can keep a value from pass to pass. Later passes may only
+  tie again a note that the first pass strikes. If no pass so far repeats that way but the next
+  pass does, the performance plays that pass too. Otherwise the markers stay on the first pass.
+  They also stay there in a loop that draws random numbers. At the loop's start, the MIDI file
+  sends each controller, pitch, preset and tempo that the game gives back there when the loop
+  ends with another value. Without those events, a player that loops on the markers would keep
+  the value from the loop's end.
 
 Short loops, such as repeating sound effects, run until the MIDI is at least 10 seconds long.
-Indefinitely held sounds are capped at 10 seconds after their last change. As in the WSF
-project, a note of 9,600 ticks or more that its track waits out counts as held. Games use such
+Indefinitely held sounds are capped at 10 seconds after their last change. A note of 9,600
+ticks or more that its track waits out counts as held. Games use such
 notes, minutes long at a typical tempo, for sounds that they stop themselves. The cap also
 covers a main loop longer than 10 seconds that ends with more than 10 seconds of no change and
 sounds only endless notes held with tie or mono. The game's next pass usually continues those
@@ -134,8 +134,9 @@ renderer plays their changes in the same frame. hacsf2 places events at the star
 that contains each tick, rounded to the nearest MIDI tick. At 120 BPM, the rounding error is at
 most 1/30 ms. No moved event crosses a loop marker. A loop keeps its contents. A sweep or a
 portamento with a portamento time moves on in every frame, between ticks too. hacsf2 writes a
-pitch bend at the start of each of those frames. After its track closes, the sweep goes on while
-the note's release sounds. Sweeps also go on after the sequence's last tick, at the last tempo.
+pitch bend at the start of each of those frames. After its track closes, the sweep goes on until
+the note's release has decayed 40 dB. Sweeps also go on after the sequence's last tick, at the
+last tempo.
 
 nn::atk applies track settings to notes at frame end. A note starts with the settings that its
 tick ends with. MIDI controller changes are written before the notes of the same tick.
@@ -168,8 +169,10 @@ A MIDI channel has one set of controllers for all its notes. In the game, each n
 settings. While notes that the game plays differently from the track's later notes still sound,
 the track moves on to a free channel when there is one. That covers release tails that the track
 has detached. Those keep their settings. The same goes for notes still sounding when a new note
-starts that sweeps, starts at a raised velocity or requires a level of its own. Each channel
-gets a MIDI track named after the sequence track, in the same way as a layer.
+starts that sweeps, starts at a raised velocity or requires a level of its own. A note whose
+pitch LFO changes while it sounds plays on a free channel as well. Its preset there has no LFO.
+Pitch bends follow the game's LFO frame by frame instead. Each channel gets a MIDI track named
+after the sequence track, in the same way as a layer.
 
 ### SoundFont
 
@@ -290,8 +293,12 @@ in MIDI, SoundFont or SFZ:
   the beginning of its cycle. The other three LFOs, and other curves (triangle, saw, square and
   random) and phases, are reported. A note keeps the speed, range, type and delay that the track
   has at the end of the note-on's tick. The game gives the note those settings then. The game
-  also updates them during playback. A note that plays its LFO with later settings is reported.
-  Depth changes work through CC1.
+  also updates them during playback. When the pitch LFO's settings change during a note, the
+  note plays on a free channel with pitch bends that follow the game's LFO (see "MIDI"). Those
+  bends follow the LFO's curve and phase too. With a random curve, the bends can differ from
+  those in the game. Such a curve is reported. A volume or pan LFO that changes during a note
+  is reported. So is a pitch LFO that changes when no channel is free. Depth changes work
+  through CC1.
 - **Deep tremolo.** In the game, a volume LFO can lower a note as far as silence but can raise
   it by no more than 6 dB. The SoundFont and SFZ LFOs swing as far up as down. A volume LFO
   deeper than 6 dB is kept to a 6 dB swing and reported. Such a tremolo dips less than in the
@@ -299,8 +306,8 @@ in MIDI, SoundFont or SFZ:
 - **SoundFont filters.** The two-pole low-pass closely matches the biquad low-pass. For the
   one-pole track filter, the two-pole low-pass passes slightly more just above cutoff and less
   in the top octave. The two-pole filter's slope is twice as steep. Cutoffs are fitted by
-  `tools/filter_tables.py`. High-pass and band-pass are omitted. Two active low-passes use the
-  lower cutoff. SFZ has all these filters.
+  ntdlib's `tools/sequence_export/filter_tables.py`. High-pass and band-pass are omitted. Two
+  active low-passes use the lower cutoff. SFZ has all these filters.
 - **Effects.** The synth's reverb stands in for the game's effect on bus A. Each game chooses
   its effects and can change them with the scene. A sequence's mix depends on where the game
   plays it. When the game puts no effect on bus B or C, a send there reaches the mix dry. CC11
@@ -320,12 +327,12 @@ in MIDI, SoundFont or SFZ:
   samples a second loses up to about 2 dB at 12 kHz and 8 dB at 24 kHz. A synth keeps those
   highs.
 - **Voice limits.** nn::atk has 96 voices unless a game sets another number. Synths usually
-  have more. If a track starts over 96 notes in one tick, hacsf2 keeps the first 96. The game
-  keeps the newest 96. After 96 legatos in a tick, the MIDI note continues with its existing
-  preset and no gain above its starting level. Legatos that would otherwise require a new note
-  are reported. When the game runs out of voices, it cuts off the notes of lowest priority,
-  usually release tails. The synth plays them out. In busy music, and in a game that sets fewer
-  voices, that happens often.
+  have more. If a track starts over 96 notes in one tick, the game keeps the newest 96. hacsf2
+  keeps the first 1,024 and reports any that it leaves out. After 96 legatos in a tick, the MIDI
+  note continues with its existing preset and no gain above its starting level. Legatos that
+  would otherwise require a new note are reported. When the game runs out of voices, it cuts off
+  the notes of lowest priority, usually release tails. The synth plays them out. In busy music,
+  and in a game that sets fewer voices, that happens often.
 
 SoundFont output follows the specification and targets FluidSynth. Player differences remain:
 
@@ -361,15 +368,17 @@ SoundFont output follows the specification and targets FluidSynth. Player differ
 
 ## Building
 
-Requires C++20 and CMake 3.20 or later, with no other build dependencies. CI builds and tests
-Windows/MSVC x64, macOS/Apple Clang on Apple Silicon and Intel, and Linux/GCC and Clang x64.
+Requires C++20 and CMake 3.20 or later. hacsf2 is built on three libraries: seqlib (MIDI,
+SoundFont 2 and SFZ files), ntdlib (Nintendo's sound archives and the conversion) and xsflib
+(binary file reads and the build setup). They are git submodules in `externals/`. Clone with
+`git clone --recursive`, or run `git submodule update --init` in a checkout. hacsf2 supports
+macOS on Apple Silicon and Windows x64 with clang-cl. CI builds and tests both.
 
-- **Windows:** install Visual Studio 2022 or later with "Desktop development with C++",
-  including CMake. Use Developer PowerShell or Developer Command Prompt.
+- **Windows:** install Visual Studio 2022 with "Desktop development with C++", including CMake.
+  Add the "C++ Clang tools for Windows" component. Use Developer PowerShell or Developer Command
+  Prompt.
 - **macOS:** install Xcode command line tools (`xcode-select --install`) and CMake
   (`brew install cmake` or the installer from cmake.org).
-- **Linux:** install GCC or Clang and CMake. On Debian/Ubuntu:
-  `sudo apt install build-essential cmake`.
 
 From the repository root:
 
@@ -379,9 +388,12 @@ cmake --build build --config Release
 ctest --test-dir build -C Release
 ```
 
+On Windows, the first command is `cmake -S . -B build -A x64 -T ClangCL`. It selects clang-cl
+and 64-bit output.
+
 The executable is `build/hacsf2`, or `build/Release/hacsf2.exe` with Visual Studio. Xcode and
-other multi-configuration generators also use `build/Release`. MSVC links the runtime
-statically. The executable requires no runtime DLLs. CI uploads the Windows executable as an
+other multi-configuration generators also use `build/Release`. The Windows build links the
+runtime statically. The executable requires no runtime DLLs. CI uploads the Windows executable as an
 artifact. macOS builds also produce `build/Hacsf2.app`. The app holds a copy of the program.
 You can move the app elsewhere.
 
@@ -389,36 +401,24 @@ C++ formatting uses clang-format with the repository's `.clang-format`.
 
 ## Tests and tools
 
-`ctest` runs unit tests without game data. Coverage includes:
-
-- DSP-ADPCM and PCM16 decoding, including nn::atk's two-channel limit and files in either
-  byte order.
-- Truncated files, missing blocks, oversized wave/region counts, invalid bank/wave references,
-  names containing control characters, line breaks or invalid UTF-8, and other consoles'
-  archives.
-- Group file lookup, malformed groups/tables, partial files, fallback to complete copies,
-  groups missing from truncated archives, and group files kept outside the archive. Archive
-  truncation is distinguished from invalid file offsets in otherwise complete archives.
-- Sequence start offsets and bank slots, little-endian arguments, loop detection, held loops,
-  the time limit, tie/mono and legato gain scaling, unheard notes, one-shot completion, tick
-  rounding, unusual arguments, stopped timing, variable polling, loops without waits, voice
-  limits and approximation reports.
-- Envelope conversion, pitch ratios, LFOs, pan, SoundFont/SFZ filters and loop unrolling.
-- SoundFont/MIDI output checked by independent readers, SFZ/WAV output and file naming.
+`ctest` checks that the program reports its version and rejects a variable that the game
+doesn't have. The conversion's unit tests are in the seqlib and ntdlib libraries. They run on
+synthetic files, without game data.
 
 Other checks and tools:
 
 - `-DHACSF2_TEST_ARCHIVE=path/to/archive.bfsar` adds the conversion of every sequence in that
-  archive. Independent readers check each output file.
-- `tools/check_sf2.py` checks SoundFont structure using Python alone.
-- `tools/filter_tables.py` derives the SoundFont and SFZ filter tables in `src/filter.cpp`
-  from a locally supplied WarioWare: Get It Together! executable, the `main` file of its
-  ExeFS. Requires Python 3 and numpy.
+  archive. seqlib's readers check each MIDI file and SoundFont. ntdlib checks the SFZ files.
+- ntdlib's `tools/sequence_export/filter_tables.py switch` derives the Switch's SoundFont and
+  SFZ filter tables in ntdlib's `src/sequence_export/filter_tables_switch.cpp` from WarioWare:
+  Get It Together!'s tables in ntdlib's `include/ntdlib/nwsnd/tables.h`. Requires Python 3 and
+  numpy.
 
-These development tools require game files supplied separately. hacsf2 doesn't distribute those
+The archive check requires a game's archive, supplied separately. hacsf2 doesn't distribute game
 files. Normal conversion requires only the input archive, and any group files beside it.
 
 ## Licence
 
-[MIT](LICENSE). hacsf2 is built from cafesf2's and citrusf2's MIT-licensed code, and follows the
-MIT-licensed 3SF project's model of nw::snd. Game data is not covered by this licence.
+hacsf2 is under the [MIT](LICENSE) licence. The libraries that it builds on (seqlib, ntdlib and
+xsflib) are under the MIT licence too. `THIRD-PARTY-NOTICES.md` gives their licence texts. Game
+data is not covered by this licence.
