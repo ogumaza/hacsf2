@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.20)
 # hacsf2 --version reports this version. The file properties of the Windows program and the Info.plist of the macOS
 # app show it too. A release changes it here and adds its notes in docs/release-notes/.
-project(hacsf2 VERSION 1.0.1 LANGUAGES CXX)
+project(hacsf2 VERSION 1.0.2 LANGUAGES CXX)
 
 # seqlib writes the MIDI and SoundFont files. ntdlib reads Nintendo's sound archives and converts their sequences.
 # xsflib holds the code that any PSF-family program could use, and the CMake functions that make the version resource

@@ -324,8 +324,18 @@ in MIDI, SoundFont or SFZ:
   the Switch's audio renderer. The renderer resamples each voice to 48 kHz with one of three
   filters. The filter depends on how fast the voice plays its wave. The filters take off up to
   about 3 dB at the top of a wave's range. A voice that reads its wave faster than 48,000
-  samples a second loses up to about 2 dB at 12 kHz and 8 dB at 24 kHz. A synth keeps those
-  highs.
+  samples a second loses up to about 2 dB at 12 kHz and 8 dB at 24 kHz. hacsf2 stands in for
+  that loss with a low-pass on the zones and regions that play their waves that fast. Zones
+  split where a key reads its wave at 48,000 and 64,000 samples a second. The renderer changes
+  filters at those rates. The cutoff follows the key. It's a fixed fraction of the rate at
+  which the key reads the wave. The fractions are fitted to FluidSynth's low-pass at 44.1 kHz
+  and to sfizz's `lpf_1p` at 48 kHz. A note keeps the low-pass of its key. A bend, sweep or
+  LFO that takes the note past one of those rates doesn't change it. A SoundFont preset whose
+  filter changes during notes (CC102) gets no such low-pass. hacsf2 reports its notes that read
+  their waves that fast. In the SFZ files, the low-pass takes a filter that the track's filters
+  leave free. A track that uses both its low-pass and its biquad leaves none while the biquad
+  is on. Its regions then play without this low-pass. In a synth, slower voices keep the highs
+  that the renderer takes off.
 - **Voice limits.** nn::atk has 96 voices unless a game sets another number. Synths usually
   have more. If a track starts over 96 notes in one tick, the game keeps the newest 96. hacsf2
   keeps the first 1,024 and reports any that it leaves out. After 96 legatos in a tick, the MIDI
@@ -336,6 +346,11 @@ in MIDI, SoundFont or SFZ:
 
 SoundFont output follows the specification and targets FluidSynth. Player differences remain:
 
+- **Level.** FluidSynth runs the SoundFont low-pass filter on every note. That includes notes
+  whose filter is open. The filter divides the level by the square root of its Q. FluidSynth
+  converts the default resonance of 0 dB to a Q of 0.707. Every note therefore plays 1.5 dB
+  louder than the SoundFont specifies. Multiplying FluidSynth's gain by 0.84 gives the specified
+  level.
 - **Pan.** Pans are mapped from nn::atk's square-root law to FluidSynth's sin/cos law.
   TinySoundFont uses a square-root law. That gives a slightly narrower result.
 - **Envelopes.** Times follow the specification's 100 dB range. FluidSynth uses 96 dB. Decays
