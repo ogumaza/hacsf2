@@ -257,8 +257,11 @@ Regions match the SoundFont, with these differences:
   note whose track sets the volume or pan in the note's first tick starts at that level and pan.
 - **Loops.** sfizz crossfades the loop end with data before the loop start over at least 1 ms.
   Samples include 4 ms of repeated loop data before the start. The crossfade is then inaudible.
+- **Key groups.** A note of a key group ends the group's other notes with the game's fade at
+  release rate 126 (`off_mode=time` and `off_time`). A SoundFont's exclusive class can't set
+  that fade.
 
-Three sfizz 1.2.3 quirks affect playback:
+Five sfizz 1.2.3 quirks affect playback:
 
 - **Decays and releases.** sfizz ends them sooner than the documentation's curve. Over the
   specified time, sfizz falls by a factor of e^-9: 78.17 dB. Where the game has fallen 40 dB,
@@ -269,6 +272,13 @@ Three sfizz 1.2.3 quirks affect playback:
 - **Streaming.** During offline rendering, streamed samples can fall silent after their
   preloaded part. The files load samples in full with `hint_ram_based=1`. sfizz prints
   "Unsupported value for hint_stealing: 1" for this. The message is harmless.
+- **Mono samples.** sfizz pans a mono sample by the sin/cos law and then raises both sides by
+  3 dB. Every sample of the files is mono. Every region therefore plays 3.0 dB above the game's
+  level, at every pan. The balance of the mix stays the same. Lowering sfizz's volume by 3 dB
+  gives the game's level.
+- **Repeated keys.** A key group in sfizz never cuts a note of the same key as the new note. The
+  documentation's `off_by` cuts it. A key of a group struck again therefore leaves the earlier
+  note playing in sfizz. The game fades that note out at release rate 126.
 
 The opcodes follow their documentation at sfzformat.com, with these exceptions:
 
