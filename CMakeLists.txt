@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.20)
 # hacsf2 --version reports this version. The file properties of the Windows program and the Info.plist of the macOS
 # app show it too. A release changes it here and adds its notes in docs/release-notes/.
-project(hacsf2 VERSION 1.0.5 LANGUAGES CXX)
+project(hacsf2 VERSION 1.1.0 LANGUAGES CXX)
 
 # The submodules: seqlib writes the MIDI, SoundFont and SFZ files. ntdlib holds the Nintendo code that hacsf2 shares
 # with the other converters and the players: the archive reader, the performer, the conversion and the command-line
@@ -22,10 +22,23 @@ xsflib_add_libraries(seqlib xsflib ntdlib)
 
 # The libraries that hacsf2 and its tests link. ntdlib's sequence_export/consoles.h holds the Switch's settings.
 add_library(hacsf2_core INTERFACE)
-target_link_libraries(hacsf2_core INTERFACE seqlib::seqlib ntdlib::sar ntdlib::sequence_export)
+target_link_libraries(hacsf2_core INTERFACE seqlib::seqlib ntdlib::bezel ntdlib::sar ntdlib::sequence_export
+                      ntdlib::nx_bex)
 
-add_executable(hacsf2 src/main.cpp)
-target_link_libraries(hacsf2 PRIVATE hacsf2_core)
+# The conversions in each state that a game's code gives a sound (src/profiles.h, ntdlib/sar/game_rules.h), the values
+# that the game gives the pieces that wait for them (src/rhythm_pieces.h), and the start of a sound that sounds
+# (src/sounding_start.h).
+add_library(hacsf2_profiles STATIC src/profiles.cpp src/profiles.h src/rhythm_pieces.cpp src/rhythm_pieces.h
+                                   src/sounding_start.cpp src/sounding_start.h)
+target_link_libraries(hacsf2_profiles PUBLIC hacsf2_core)
+target_include_directories(hacsf2_profiles PUBLIC src)
+
+# The handlers of two games' user procedures, and the table of the games' sound archives (src/user_procedures.h).
+add_library(hacsf2_procedures STATIC src/procedure_archives.cpp src/user_procedures.cpp src/user_procedures.h)
+target_link_libraries(hacsf2_procedures PUBLIC hacsf2_core)
+
+add_executable(hacsf2 src/main.cpp src/synced_pieces.cpp src/synced_pieces.h)
+target_link_libraries(hacsf2 PRIVATE hacsf2_profiles hacsf2_procedures)
 xsflib_add_version(hacsf2 VERSION ${PROJECT_VERSION} DEFINE HACSF2_VERSION
                    DESCRIPTION "Nintendo Switch sound archive converter" PRODUCT hacsf2
                    COPYRIGHT "Copyright (c) 2026 the hacsf2 authors. MIT licence.")
@@ -42,6 +55,22 @@ if(BUILD_TESTING)
   # converts and checks every sequence of an archive with tests/hacsf2_test.cpp.
   xsflib_add_converter_tests(hacsf2 EXTENSION .bfsar VERSION ${PROJECT_VERSION}
                              LIBRARIES hacsf2_core ntdlib::testing)
+
+  # The states of the sounds under a game's rules (tests/profiles_test.cpp).
+  add_executable(hacsf2_profiles_test tests/profiles_test.cpp)
+  target_link_libraries(hacsf2_profiles_test PRIVATE hacsf2_profiles xsflib::testing)
+  add_test(NAME hacsf2_profiles COMMAND hacsf2_profiles_test)
+
+  # The start of a sound that sounds (tests/sounding_start_test.cpp).
+  add_executable(hacsf2_sounding_start_test tests/sounding_start_test.cpp)
+  target_link_libraries(hacsf2_sounding_start_test PRIVATE hacsf2_profiles xsflib::testing)
+  add_test(NAME hacsf2_sounding_start COMMAND hacsf2_sounding_start_test)
+
+  # The table of the sound archives whose games' handlers of user procedures hacsf2 runs, and the models.
+  add_executable(hacsf2_procedures_test tests/procedures_test.cpp)
+  target_include_directories(hacsf2_procedures_test PRIVATE src)
+  target_link_libraries(hacsf2_procedures_test PRIVATE hacsf2_procedures)
+  add_test(NAME hacsf2_procedures COMMAND hacsf2_procedures_test)
 
   # Load local_tests.cmake from each immediate subdirectory to register tests that use locally supplied files.
   xsflib_include_local_tests()
