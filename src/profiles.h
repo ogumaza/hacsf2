@@ -34,7 +34,8 @@ uint32_t SoundOf(std::size_t index);
 std::size_t StateOf(std::size_t index);
 
 // `perform` for state `state` of the sound named `name` under `rules`: without the tracks that the state turns down
-// (PerformOptions::tracks), and with the dry gain of the state's reverb on aux bus B (PerformOptions::bus_reverbs).
+// (PerformOptions::tracks), and with the dry gain of the state's reverb on aux bus B (PerformOptions::bus_reverbs). An
+// archive with rules also takes their delay on aux bus A (PerformOptions::bus_a_delay).
 ntdlib::sequence_export::PerformOptions InState(const ntdlib::sequence_export::PerformOptions& perform,
                                                 const ntdlib::sar::ArchiveRules& rules, std::string_view name,
                                                 std::size_t state);

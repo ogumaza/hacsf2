@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <exception>
 #include <optional>
-#include <stdexcept>
 #include <string>
 #include <system_error>
 #include <vector>
@@ -86,12 +85,14 @@ se::UserProcedureModel ProcedureModel(bex::ProcedureHandler handler, const std::
         }
 
         const std::optional<std::vector<uint8_t>> bytes = se::ReadFile(*path);
+        if (!bytes)
+        {
+            std::fprintf(stderr, "warning: %s: can't read the table\n", xsflib::Utf8(*path).c_str());
+            continue;
+        }
+
         try
         {
-            if (!bytes)
-            {
-                throw std::runtime_error("can't read the table");
-            }
             model.SetTable(number, bex::ReadProcedureTable(*bytes));
         }
         catch (const std::exception& e)

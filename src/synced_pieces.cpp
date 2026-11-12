@@ -2,7 +2,6 @@
 
 #include "synced_pieces.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
@@ -35,18 +34,10 @@ std::vector<SyncedSequence> FindSyncedSequences(const std::filesystem::path& inp
                                                 const ntdlib::sar::SoundArchive& archive)
 {
     std::vector<SyncedSequence> synced;
-    const std::optional<std::vector<uint8_t>> bytes = se::ReadFile(input);
-    if (!bytes)
+    for (const bex::SyncedPiece& piece : bex::SyncedPieces(archive.Bytes()))
     {
-        return synced;
-    }
-
-    const auto& sounds = archive.Sounds();
-    for (const bex::SyncedPiece& piece : bex::SyncedPieces(*bytes))
-    {
-        const auto sound =
-            std::find_if(sounds.begin(), sounds.end(), [&piece](const auto& s) { return s.name == piece.label; });
-        if (sound == sounds.end())
+        const std::optional<uint32_t> sound = archive.FindSound(std::string(piece.label));
+        if (!sound)
         {
             continue;
         }
@@ -77,7 +68,7 @@ std::vector<SyncedSequence> FindSyncedSequences(const std::filesystem::path& inp
             }
 
             SyncedSequence sequence;
-            sequence.sound = static_cast<std::size_t>(sound - sounds.begin());
+            sequence.sound = *sound;
             sequence.name = std::string(piece.label) + " " + std::string(stream.label);
             for (const bex::ProcedureWrite& write : play.writes)
             {

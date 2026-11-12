@@ -6,7 +6,6 @@
 // once, with its variables at -1. When that conversion plays no sample, hacsf2 tries the values that the archive's
 // rules give the sound's variables (ntdlib/sar/game_rules.h). When none of them plays one either and the sequence drew
 // a number, hacsf2 converts the sound as the game starts it later. It keeps the first conversion that plays a sample.
-// hsfrip looks for the same start.
 
 #pragma once
 
@@ -21,7 +20,7 @@
 namespace hacsf2
 {
 
-// The latest start that ConvertSounding tries, in frames of 5 ms after the sound's start. hsfrip tries the same.
+// The latest start that ConvertSounding tries, in frames of 5 ms after the sound's start.
 constexpr uint32_t kStartDelays = 400;
 
 // nn::atk's random state `frames` frames after `seed`: the state steps once a frame (x = x * 0x19660D + 0x3C6EF35F).

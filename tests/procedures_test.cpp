@@ -152,6 +152,12 @@ int main(int argc, char** argv)
     for (int i = 1; i + 1 < argc; i += 2)
     {
         const std::string game = argv[i];
+        if (game != "jamboree" && game != "superstars")
+        {
+            Check(false, "the game " + game + " is jamboree or superstars");
+            continue;
+        }
+
         const bex::ProcedureHandler handler =
             game == "jamboree" ? bex::ProcedureHandler::kJamboree : bex::ProcedureHandler::kSuperstars;
         TestGameFiles(handler, xsflib::PathFromUtf8(argv[i + 1]));
