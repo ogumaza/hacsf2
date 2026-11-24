@@ -32,12 +32,12 @@ Some sequences play nothing until the game sets one of their variables. `--var` 
 each sequence starts. As in the game, player and global variables start at -1. Use `--only` to
 choose the sequences that `--var` applies to.
 
-A game on Bezel Engine, such as WarioWare: Get It Together! or WarioWare: Move It!, gives its
-sounds levels in its sound sheets (`Data/SheetBin/SoundVoice_*.elf`), outside the sound archive.
+A game on Bezel Engine, such as WarioWare: Get It Together! or WarioWare: Move It!, sets the
+levels of its sounds in its sound sheets (`Data/SheetBin/SoundVoice_*.elf`), outside the sound archive.
 A piece's level there runs from 0.3 to 2.37. Unpack the game's `.bea` archives into folders beside
 each other. hacsf2 then finds the sheets by itself: it looks for `Data/SheetBin` in the archive's
 folder, in the three folders above it, and in the folders directly below each of those. `--sheets`
-names the folder when it lies elsewhere. Without sheets, each sequence plays at the archive's
+names the folder when it's somewhere else. Without sheets, each sequence plays at the archive's
 level.
 
 Some of WarioWare: Get It Together!'s microgames turn tracks of their music up and down as the
@@ -49,15 +49,15 @@ later state gets a conversion too, named after the piece and the state, such as
 CC11 0 from the start. Its notes stay in the MIDI file.
 
 Each of the game's microgames also puts a reverb on effect bus B as it starts. The reverb stays
-there until the stage ends. Before a stage's first microgame, bus B is empty. The microgames'
-sequences that send to bus B convert with their microgame's reverb there. The game's other
-sequences that send to bus B, such as the stages' music, convert with bus B empty. Each of them
-also gets a conversion with each reverb, such as `BGM_T_Sport_SpeedUp Hall reverb`. WarioWare:
-Move It! keeps a reverb on bus B for every sequence. hacsf2 finds its `Sound.bfsar` the same
-way. A send to a bus with a reverb goes to the synth's reverb (CC91), beside effect send A.
-Move It! keeps a delay on bus A, and there CC91 holds the reverb's send alone. CC11 holds only
-the reverb's dry part: a quarter of the send for `I3DL2_Default`, and none for `I3DL2_Hall` or
-Move It!'s `I3DL2_Waltz`.
+there until the stage ends. Before a stage's first microgame, bus B is empty. The sequences of
+the microgames that send to bus B convert with the reverb of their microgame there. The game's
+other sequences that send to bus B, such as the stages' music, convert with bus B empty. Each of
+them also gets a conversion with each reverb, such as `BGM_T_Sport_SpeedUp Hall reverb`.
+WarioWare: Move It! keeps a reverb on bus B for every sequence. hacsf2 finds its `Sound.bfsar`
+the same way. A send to a bus with a reverb goes to the synth's reverb (CC91), beside effect
+send A. Move It! keeps a delay on bus A, and in its conversions CC91 contains only the send to
+the reverb. CC11 keeps only the dry part of the reverb: a quarter of the send for
+`I3DL2_Default`, and none for `I3DL2_Hall` or the `I3DL2_Waltz` of Move It!.
 
 Clubhouse Games: 51 Worldwide Classics puts the sound library's reverb on bus B in two of its
 games, the piano and bowling. hacsf2 converts their sounds with that reverb. Their sends to bus
@@ -66,7 +66,7 @@ B go to CC91 as well, and none of them reaches the mix dry.
 Super Mario Party Jamboree's rhythm mode has 134 pieces that wait for values from the game.
 hacsf2 recognizes the mode's sub-archives (`subarc_rc_cmn.fsst`, the rhythm stage's archive and
 `subarc_mg1801.fsst` to `subarc_mg1810.fsst`). It converts each piece with the tempo and the
-number that the game gives it. `--var` overrides them. In the game, the mode's controller,
+number that the game passes to it. `--var` overrides them. In the game, the mode's controller,
 `SQ_BGM_RC_MAIN_RHYTHM` in `subarc_rc_cmn.fsst`, plays beside each piece. It plays a kick drum on
 each beat under 59 of the pieces. hacsf2 converts each piece together with the controller into one
 MIDI file. The two exchange the game's variables as they do in the game. The controller's tracks
@@ -79,16 +79,16 @@ controller, with a warning.
 Super Mario Party's Sound Stage has 129 pieces of the same design. hacsf2 recognizes the
 stage's sub-archives (`subarc_bdcn001.fsst`, `subarc_common_a.fsst` and `subarc_mgcn401.fsst`
 to `subarc_mgcn410.fsst`). It converts each piece with the tempo and the number that the game
-gives it. In the game, the stage's controller, `SQ_BGM_BDCN001_MAIN_RHYTHM` in
+passes to it. In the game, the stage's controller, `SQ_BGM_BDCN001_MAIN_RHYTHM` in
 `subarc_common_a.fsst`, plays a kick drum on each beat under 67 of the pieces. hacsf2 converts
 each piece together with the controller, as for Jamboree, when it finds `subarc_common_a.fsst`.
 
 Jamboree's star melody, `SQ_BGM_STAR_MELODY` in `subarc_bgm_bd01_star_melody.fsst`, follows the
 beat and the chords of the board's music. The game plays it over one of 15 streams: the main
 streams of the seven boards, with and without the last stretch of the game, and board 5's sale.
-Each stream file holds markers of its beats and chords, and the stream's jump setting gives the
-order of its parts. hacsf2 converts the melody once for each stream whose file and jump setting
-lie beside the archive, under the names that the game gives them, such as
+Each stream file contains markers of its beats and chords, and the jump setting of the stream
+sets the order of its parts. hacsf2 converts the melody once for each stream whose file and jump
+setting are beside the archive, under their names in the game, such as
 `SM_BGM_BD01_MAIN_JMP.dspadpcm.bfstm` (from the game's `stream` folder) and
 `SM_BGM_BD01_MAIN_JMP.msgpack` (from `audio/jump_setting/conv` in `audio.nx.bea`). The
 conversion's name is the melody's, a space and the stream's, such as
@@ -97,25 +97,25 @@ parts and the loop once more, starting with the stream. The stream itself isn't 
 conversion. Without the stream files, the melody converts as a sequence that plays nothing.
 
 Jamboree's and Mario Party Superstars' sounds pick one of their variants at random. Such a
-sound calls a user procedure: code of the game that draws a number and gives it to the
+sound calls a user procedure: code of the game that draws a number and passes it to the
 sequence. The sound then plays the variant with that number. hacsf2 recognizes every sound
 archive of the two games, and runs the game's procedures as the game's code does. Each
-sequence starts from the state that the game's code gives the procedures as the game starts.
-A conversion therefore plays the same variant every time. In the game, the variant changes
-from play to play. One of Jamboree's procedures reads a table from the game's files,
-`audio/userproc/conv/00.msgpack` in `audio.nx.bea`. hacsf2 finds it beside the archive, or in
-the game's folders when the archive is in `audio/sounddata`. Without the table, the sounds
-that read it play as if the game had loaded none.
+sequence starts from the state that the game's code sets up for the procedures as the game
+starts. A conversion therefore plays the same variant every time. In the game, the variant
+changes from play to play. One of Jamboree's procedures reads tables from the game's files,
+`audio/userproc/conv/00.msgpack` to `15.msgpack` in `audio.nx.bea`. hacsf2 finds them beside
+the archive, or in the game's folders when the archive is in `audio/sounddata` or `_Resident`.
+Without a table, the sounds that read it play as if the game had loaded none.
 
 Some sound effects play only once the game has written one of their variables as it starts
 them. Others play only on some draws of the game's random numbers. hacsf2 starts such an effect
-in a state that the game can give it. For Super Mario 3D World + Bowser's Fury's `SeData.bfsar`
-and some of Super Mario Party Jamboree's archives, hacsf2 holds the values that the games' code
-writes. It tries each of them until the effect plays a note above volume 0. A `--var` value
-replaces the value for its variable. An effect that draws a number and plays nothing from the
-default seed converts from a later start. hacsf2 steps the generator once a frame, as the game
-does, for 1 to 400 frames, and takes the first start that plays such a note. `--seed` turns
-that search off.
+in a state that the game can start it in. For the `SeData.bfsar` of Super Mario 3D World +
+Bowser's Fury and some of Super Mario Party Jamboree's archives, hacsf2 contains the values that
+the games' code writes. It tries each of them until the effect plays a note above volume 0. A
+`--var` value replaces the value for its variable. An effect that draws a number and plays
+nothing from the default seed converts from a later start. hacsf2 steps the generator once a
+frame, as the game does, for 1 to 400 frames, and takes the first start that plays such a note.
+A `--seed` other than the default turns that search off.
 
 Files use the sequence names, with adjustments for Windows: forbidden characters and trailing
 dots or spaces become `_`, and reserved device names such as `CON` get an added `_`. If names
@@ -125,8 +125,8 @@ collide with the SFZ sample folder. The default output folder is `<archive name>
 the same rules apply to its name. Use `--output` to choose another location.
 
 Switch games use nn::atk, the successor of the Wii U's sound library, nw::snd. hacsf2 plays
-each sequence the way nn::atk does. The Switch's timing, audio renderer and arithmetic come
-from the executable of WarioWare: Get It Together!.
+each sequence the way nn::atk does. The models of the Switch's timing, audio renderer and
+arithmetic follow the executable of WarioWare: Get It Together!.
 
 ## Downloads
 
@@ -162,7 +162,7 @@ controllers. The performer follows the Switch's nn::atk player, including:
   finish. Note ends are calculated frame by frame. nn::atk works in 5 ms sound frames. The
   Switch's audio renderer plays a voice from the frame its note starts in. A one-shot wave ends
   when the renderer has played all of it, at the pitch that the note's sweep, the track's bend
-  and the pitch LFOs give. nn::atk works that pitch out again each frame. The renderer reports a
+  and the pitch LFOs produce. nn::atk works that pitch out again each frame. The renderer reports a
   wave's end two frames late. nn::atk frees the note's channel the frame after that. Envelopes
   start at -90.4 dB and first advance at frame end. Notes released or stopped before then are
   inaudible and produce no MIDI note. A note whose length runs out before then sounds for that
@@ -195,7 +195,7 @@ controllers. The performer follows the Switch's nn::atk player, including:
   repeats that way but the next pass does, the performance plays that pass too. Otherwise the
   markers stay on the first pass. They also stay there in a loop that draws random numbers. At
   the loop's start, the MIDI file sends each controller, pitch, preset and tempo that the game
-  gives back there when the loop ends with another value. Without those events, a player that
+  restores there when the loop ends with another value. Without those events, a player that
   loops on the markers would keep the value from the loop's end.
 
 Short loops, such as repeating sound effects, run until the MIDI is at least 10 seconds long.
@@ -210,7 +210,7 @@ releases it, such as a tie, ends where its envelope has decayed 60 dB. If its su
 stays above that, the note ends at 40 dB down. The game's channel goes on in silence.
 Performances stop after 15 minutes. One that has been silent for more than 10 seconds by then
 ends with its last sound too. Tempo or timebase 0 stops sequence timing while notes keep
-playing. Those notes finish normally, or take the same 10-second limit if held indefinitely.
+playing. Those notes finish normally, or stop at the same 10-second limit if held indefinitely.
 
 ### MIDI
 
@@ -235,7 +235,7 @@ tick ends with. MIDI controller changes are written before the notes of the same
 |---|---|
 | Track volume, up to 127 | CC7 |
 | Track volume above 127 × second volume × main volume × sound volume × dry sends, plus legato velocity changes | CC11. Like nn::atk's volumes, CC7 and CC11 both act squared. Values are scaled for sequences exceeding MIDI's range (see [Differences from the game](#differences-from-the-game)). |
-| Main send and effect sends B and C, which reach the mix dry | Part of CC11 (see below) |
+| Main send, and effect sends B and C where they reach the mix dry | Part of CC11 (see below) |
 | Effect send A, and the sends to a bus with a reverb (see above) | CC91 (reverb) |
 | Track pan | CC10, mapped to the SoundFont pan law |
 | Pitch bend, sweep, portamento and legato key changes | Pitch bend, with RPN 0 range set per channel |
@@ -249,10 +249,10 @@ tick ends with. MIDI controller changes are written before the notes of the same
 A voice sends its sound to a main bus and to three effect buses, A to C. The main send and the
 effect sends set how much goes to each. On the Switch, every bus reaches the output. A bus that
 the game puts no effect on reaches it dry, in phase with the main bus. The main send and effect
-sends B and C add up to the note's level, and CC11 holds them. Effect send A goes to the synth's
-reverb. Games usually put a reverb on that bus.
+sends B and C add up to the note's level in CC11. Effect send A goes to the synth's reverb.
+Games usually put a reverb on that bus.
 
-A MIDI channel can hold only one note per key. Repeated strikes that overlap, common in drums,
+A MIDI channel can sound only one note per key. Repeated strikes that overlap, common in drums,
 get extra channels called layers, with matching controllers, up to the 16-channel limit.
 
 A MIDI channel has one set of controllers for all its notes. In the game, each note keeps its
@@ -287,11 +287,11 @@ regions become zones with:
 - Continued playback for regions that ignore note-off. Their MIDI notes end when the game
   would release them, with release settings that also preserve decay after a repeated strike.
 
-A SoundFont holds at most 65,535 zones, generators and modulators. Each preset holds every zone
-of its bank instrument. A sequence with many presets of large instruments can pass that limit.
-Its SoundFont then holds only the zones that the sequence's notes pick, and hacsf2 says so. A
-synth picks zones by a note's key and velocity as the note starts. The zones left out never sound.
-The SFZ files keep every zone.
+A SoundFont contains at most 65,535 zones, generators and modulators. Each preset contains every
+zone of its bank instrument. A sequence with many presets of large instruments can pass that
+limit. Its SoundFont then contains only the zones that the sequence's notes pick, and hacsf2
+says so. A synth picks zones by a note's key and velocity as the note starts. The zones left out
+never sound. The SFZ files keep every zone.
 
 hacsf2 reads Switch FSAR archives and their FSEQ, FBNK, FWAR and FWAV files. They're the Wii U's
 formats in little-endian byte order. Supported wave encodings are PCM8, PCM16 and DSP-ADPCM.
@@ -303,11 +303,11 @@ Some games keep groups outside the archive, in files that the game loads itself.
 for each such group as `<group name>.bfgrp` beside the archive, or in a `userManagementFiles`
 folder beside it. A game can also keep these group files in SARC archives under other names.
 While a group is still missing, hacsf2 reads the group files in the `.sarc` files beside the
-archive too. A folder can hold another archive's group files as well. hacsf2 takes a group file
-from a SARC only if its files are of the kinds that the archive gives them. When hacsf2 finds
-none of the groups, a warning says so. Archives from other consoles are refused: the 3DS's
-`.bcsar`, the Wii's `.brsar` and the Wii U's `.bfsar`. The Wii U's archives are big-endian, and
-the Switch's archives are little-endian.
+archive too. A folder can contain the group files of another archive as well. hacsf2 takes a
+group file from a SARC only if its files are of the kinds that the archive lists for them. When
+hacsf2 finds none of the groups, a warning says so. Archives from other consoles are refused:
+the 3DS's `.bcsar`, the Wii's `.brsar` and the Wii U's `.bfsar`. The Wii U's archives are
+big-endian, and the Switch's archives are little-endian.
 
 ## SFZ files
 
@@ -339,8 +339,8 @@ Regions match the SoundFont, with these differences:
   the game, the choice is the one that the note's sound frame ends with. Each track uses its
   first biquad type. Later types are omitted and reported.
 - **Envelopes.** As in the game, decays and releases fall linearly in dB. The documentation's
-  curve falls by a factor of e^-8 over the specified time. That's 69.49 dB. The SFZ files give
-  them the game's time for that fall. Attack uses the SoundFont fit described above.
+  curve falls by a factor of e^-8 over the specified time. That's 69.49 dB. The SFZ files set
+  each decay and release to the game's time for that fall. Attack uses the SoundFont fit described above.
 - **LFO.** SFZ uses a sine, the game's default curve. SFZ also supports pan LFO.
 - **Pan.** A curve maps CC10 to `(value - 64) / 64`. That's the SoundFont convention that the
   MIDI output uses.
@@ -379,16 +379,15 @@ The opcodes follow their documentation at sfzformat.com, with these exceptions:
 
 - **Long decays and releases.** A decay or release can last longer than the documented limit of
   100 s. The game's envelope falls that slowly. sfizz 1.2 plays the time as written.
-- **Loud regions.** A region's `volume` can lie above the documented limit of 6 dB. sfizz 1.2
-  takes volumes up to 48 dB.
+- **Loud regions.** A region's `volume` can be above the documented limit of 6 dB. sfizz 1.2
+  accepts volumes up to 48 dB.
 - **Low resonances.** The game's biquad presets have resonances down to -46 dB. The documented
   range starts at 0 dB. Each biquad track's curve reaches resonances below 0 dB. sfizz 1.2 plays
   those resonances.
 - **A wide resonance amount.** Biquad type 5 has steps down to -46 dB. A track of that type
-  moves its resonance in units of 50 dB. The documentation gives the amount a range of -40 to
-  40 dB.
+  moves its resonance in units of 50 dB. The documented range of the amount is -40 to 40 dB.
 - **High cutoffs.** A region pitched far up can get a low-pass cutoff above half the output's
-  sample rate. The documentation gives half the rate as the limit.
+  sample rate. The documentation sets the limit at half the rate.
 
 ## Differences from the game
 
@@ -398,7 +397,7 @@ in MIDI, SoundFont or SFZ:
 - **Per-note pitch.** Game sweeps, portamento and legato key changes affect individual notes.
   MIDI pitch bend affects the whole channel. A note that sweeps beside another sounding note
   goes on another channel (see "MIDI").
-- **Legato.** Tie/mono normally continue the existing note. Pitch bend gives the key changes,
+- **Legato.** Tie/mono normally continue the existing note. Pitch bend follows the key changes,
   and CC11 the velocity changes. A note that legatos take above its velocity starts at the
   highest velocity they reach. CC11 lowers it until then. That works as long as the instrument
   plays the same region at that velocity. Past that, CC11 goes above 127 (see "Volume limits").
@@ -422,7 +421,7 @@ in MIDI, SoundFont or SFZ:
 - **LFOs.** Only a track's first LFO is converted. The converted LFO is a sine that starts at
   the beginning of its cycle. The other three LFOs, and other curves (triangle, saw, square and
   random) and phases, are reported. A note keeps the speed, range, type and delay that the track
-  has at the end of the note-on's tick. The game gives the note those settings then. The game
+  has at the end of the note-on's tick. The game sets them on the note then. The game
   also updates them during playback. When the pitch LFO's settings change during a note, the
   note plays on a free channel with pitch bends that follow the game's LFO (see "MIDI"). Those
   bends follow the LFO's curve and phase too. With a random curve, the bends can differ from
@@ -441,22 +440,22 @@ in MIDI, SoundFont or SFZ:
 - **Effects.** The synth's reverb stands in for the game's effect on bus A. Each game chooses
   its effects and can change them with the scene. A sequence's mix depends on where the game
   plays it. When the game puts no effect on bus B or C, a send there reaches the mix dry. CC11
-  gives that. For the reverbs that WarioWare: Get It Together!, WarioWare: Move It! and
+  contains that send. For the reverbs that WarioWare: Get It Together!, WarioWare: Move It! and
   Clubhouse Games: 51 Worldwide Classics put on bus B, the send goes to the synth's reverb, and
-  CC11 holds the reverb's dry part. For any other effect there, hacsf2 plays the send dry.
+  CC11 contains the dry part of the reverb. For any other effect there, hacsf2 plays the send dry.
   Surround pan is omitted. Pan LFO is omitted from SoundFont but included in SFZ.
 - **Volume limits.** Archive sound volume, track volume, second/main volume and region volume
-  can reach 255, and the sends that reach the mix dry add to them. MIDI CC7 holds track volume
-  up to 127. CC11 holds the rest, also up to 127. If necessary, all CC11 values are scaled
+  can reach 255, and the sends that reach the mix dry add to them. MIDI CC7 contains track volume
+  up to 127. CC11 contains the rest, also up to 127. If necessary, all CC11 values are scaled
   equally. That keeps the balance between tracks and lowers the sequence's level. SoundFont also
   cannot amplify a sample: if any used region exceeds volume 127, every zone is attenuated
   equally to preserve region balance. hacsf2 reports the reduction. SFZ restores the MIDI gain
   and keeps each region's original volume.
 - **A sound's level.** The game chooses a sound's record in its sheets as it plays. A piece that
-  the game plays through records with other names can play at several levels. hacsf2 takes the
-  record named after the sound. Without one, it takes the level that most of the records give,
+  the game plays through records with other names can play at several levels. hacsf2 uses the
+  record named after the sound. Without one, it uses the level that most of the records set,
   and the higher one on a tie. A sound without a record plays at the archive's level. The game
-  can also add a random change to the level for each play. hacsf2 takes the middle of its range.
+  can also add a random change to the level for each play. hacsf2 uses the middle of its range.
 - **The renderer's output.** Interpolation and output limiting in synths differ from those of
   the Switch's audio renderer. The renderer resamples each voice to 48 kHz with one of three
   filters. The filter depends on how fast the voice plays its wave. The filters take off up to
@@ -469,7 +468,7 @@ in MIDI, SoundFont or SFZ:
   and to sfizz's `lpf_1p` at 48 kHz. A note keeps the low-pass of its key. A bend, sweep or
   LFO that takes the note past one of those rates doesn't change it. A SoundFont preset whose
   filter changes during notes (CC102) gets no such low-pass. hacsf2 reports its notes that read
-  their waves that fast. In the SFZ files, the low-pass takes a filter that the track's filters
+  their waves that fast. In the SFZ files, the low-pass uses a filter that the track's filters
   leave free. A track that uses both its low-pass and its biquad leaves none while the biquad
   is on. Its regions then play without this low-pass. In a synth, slower voices keep the highs
   that the renderer takes off.
@@ -477,7 +476,7 @@ in MIDI, SoundFont or SFZ:
   asks for a pitch past a limit plays at the limit in the game. A note whose key starts past a
   limit and whose pitch holds still gets zones and regions that play at the limit too. Every key
   past a limit then plays at one pitch, with a scale tuning of 0 in the SoundFont and
-  `pitch_keytrack=0` in the SFZ files. Those keys take no resampling low-pass. A note that a bend,
+  `pitch_keytrack=0` in the SFZ files. Those keys get no resampling low-pass. A note that a bend,
   a sweep or an LFO moves plays every key at its pitch. In the game, such a note stays at the
   limit for as long as its pitch would pass it. In the files, it plays past the limit then.
 - **Voice limits.** nn::atk has 96 voices unless a game sets another number. Synths usually
@@ -508,7 +507,7 @@ low-pass's resonance. Player differences remain:
 - **Attenuation.** FluidSynth, BASSMIDI and the E-mu chips apply 0.4 of a zone's initial
   attenuation. The specification calls for all of it. hacsf2 therefore writes 2.5 times a zone's
   attenuation in the generator, up to the generator's limit of 1440 cB. Those players play that
-  limit as 57.6 dB. A modulator without a source holds any attenuation beyond 57.6 dB.
+  limit as 57.6 dB. A modulator without a source contains any attenuation beyond 57.6 dB.
   FluidSynth 2.4.5 and later apply that modulator. BASSMIDI and earlier versions of FluidSynth
   ignore it. A player that follows the specification plays every attenuated zone too quietly.
   TinySoundFont plays a quarter of the attenuation. Before 27 January 2025, TinySoundFont played
@@ -525,7 +524,7 @@ low-pass's resonance. Player differences remain:
   full envelope range. Earlier versions use -200 timecents, about 0.9 s. BASSMIDI ends them in
   about 4 ms.
 - **Modulators.** BASSMIDI 2.4.16 ignores the CC1 and CC102 modulators and the modulator without
-  a source (see "Attenuation"). CC1 then gives the specification's default vibrato in every
+  a source (see "Attenuation"). CC1 then applies the specification's default vibrato in every
   zone: 50 cents at CC1 127. A tremolo becomes that vibrato. Filters that change during a note
   stay open. TinySoundFont doesn't support SoundFont modulators. CC1 LFO depth and CC102 filter
   changes have no effect there.
@@ -549,7 +548,7 @@ with clang-cl. CI builds both. It runs the tests on Windows.
 - **macOS:** install Xcode command line tools (`xcode-select --install`) and CMake
   (`brew install cmake` or the installer from cmake.org).
 
-hacsf2 builds on three libraries: seqlib, xsflib and ntdlib. The repository holds them as Git
+hacsf2 builds on three libraries: seqlib, xsflib and ntdlib. The repository contains them as Git
 submodules in `externals/`. Clone it with its submodules:
 
 ```sh
@@ -572,7 +571,7 @@ and 64-bit output.
 The executable is `build/hacsf2`, or `build/Release/hacsf2.exe` with Visual Studio. Xcode and
 other multi-configuration generators also use `build/Release`. The Windows build links the
 runtime statically. The executable requires no runtime DLLs. CI uploads the Windows executable as an
-artifact. macOS builds also produce `build/Hacsf2.app`. The app holds a copy of the program.
+artifact. macOS builds also produce `build/Hacsf2.app`. The app contains a copy of the program.
 You can move the app elsewhere.
 
 C++ formatting uses clang-format with the repository's `.clang-format`.
@@ -580,8 +579,10 @@ C++ formatting uses clang-format with the repository's `.clang-format`.
 ## Tests and tools
 
 `ctest` checks that the program reports its version and rejects a variable that the game
-doesn't have. The conversion's unit tests are in the seqlib and ntdlib libraries. They run on
-synthetic files, without game data.
+doesn't have. It also runs the tests of hacsf2's game profiles: the states that a game's code
+sets for a sound, the first start of a sound that plays a note, the table of the sound archives
+whose user procedures hacsf2 runs, and the models of those procedures. The unit tests of the conversion itself are in the
+seqlib and ntdlib libraries. All of these tests run on synthetic files, without game data.
 
 Other checks and tools:
 
@@ -600,5 +601,5 @@ files. Normal conversion requires only the input archive, and any group files be
 ## Licence
 
 hacsf2 is under the [MIT](LICENSE) licence. The libraries it builds on, seqlib, xsflib and
-ntdlib, are under the MIT licence too. `THIRD-PARTY-NOTICES.md` gives their licence texts. Game
+ntdlib, are under the MIT licence too. `THIRD-PARTY-NOTICES.md` contains their licence texts. Game
 data is not covered by this licence.

@@ -16,7 +16,7 @@ namespace
 
 using ntdlib::sequence_export::Sequence;
 
-// The bits of a sequence's index above the sound's index hold the state's number.
+// The bits of a sequence index above the sound index contain the number of the state.
 constexpr int kStateShift = 32;
 static_assert(sizeof(std::size_t) * 8 > kStateShift, "a sequence's index has room for a state's number");
 

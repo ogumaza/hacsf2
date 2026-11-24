@@ -45,6 +45,7 @@ se::Conversion Converted(bool plays, bool draws)
         conversion.samples = 1;
         conversion.midi = OneNote(100);
     }
+
     conversion.performance.draws = draws;
 
     return conversion;
@@ -107,7 +108,8 @@ int main()
     given.variables[6] = 5;
     calls = 0;
     const se::Conversion kept = hacsf2::ConvertSounding(waiting, given, states);
-    Check(!hacsf2::PlaysSample(kept) && calls == 3 + 400, "a value from --var stays, and later starts follow");
+    Check(!hacsf2::PlaysSample(kept) && calls == 3 + ntdlib::sar::kStartDelays,
+          "a value from --var stays, and later starts follow");
 
     return xsflib::testing::Summary("hacsf2 sounding start");
 }

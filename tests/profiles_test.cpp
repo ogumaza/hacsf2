@@ -2,9 +2,9 @@
 
 // The conversions in each state of a sound (src/profiles.h). A sound's sequence plays its first state, and the
 // sequences of its later states follow it, with the state's name after the sound's. The other sequences stay as they
-// are. Each sequence's index gives back its sound and its state. The state gives the tracks that play and the dry gain
-// of the reverb on aux bus B. The renderer's reverb holds its dry gain in its eleventh value, not its last. An archive
-// without rules converts as before.
+// are. SoundOf and StateOf read the sound and the state back from the index of each sequence. The state sets the tracks
+// that play and the dry gain of the reverb on aux bus B. The dry gain of the renderer's reverb is its eleventh
+// parameter, not its last. An archive without rules converts as before.
 
 #include "profiles.h"
 
@@ -64,7 +64,7 @@ int main()
                                   ntdlib::sar::ReverbType::kReverb});
     room.bus_b_always = "EFFECT_ROOM";
     Check(hacsf2::InState(perform, room, "SEQ_A", 0).bus_reverbs[1] == 0.25f,
-          "the renderer's reverb on bus B gives its dry gain, its eleventh value");
+          "the renderer's reverb on bus B sets the dry gain from its eleventh parameter");
 
     const ntdlib::sar::ArchiveRules none;
     Check(hacsf2::WithStates({{0, "SEQ_A"}, {7, "SEQ_B"}}, none).size() == 2 &&

@@ -106,7 +106,7 @@ se::Conversion ConvertSounding(const Convert& convert, const se::PerformOptions&
     }
 
     se::PerformOptions later = perform;
-    for (uint32_t delay = 1; delay <= kStartDelays; ++delay)
+    for (uint32_t delay = 1; delay <= ntdlib::sar::kStartDelays; ++delay)
     {
         later.seed = StateAfter(perform.seed, delay);
         se::Conversion conversion = convert(later);

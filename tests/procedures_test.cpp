@@ -6,14 +6,13 @@
 //
 //     hacsf2_procedures_test [jamboree DIR] [superstars DIR]
 //
-// Each DIR holds a game's sound files, unpacked from the game's .bea archives.
+// Each DIR contains the sound files of a game, unpacked from its .bea archives.
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <fstream>
 #include <optional>
 #include <set>
 #include <string>
@@ -35,7 +34,7 @@ namespace
 
 namespace bex = ntdlib::nx::bex;
 
-// The table is in order, lists each archive once, and gives each a SHA-1 of 40 hex digits and one of the two handlers.
+// The table is in order and lists each archive once, with a SHA-1 of 40 hex digits and one of the two handlers.
 void TestTable()
 {
     const auto archives = hacsf2::ProcedureArchives();
@@ -77,8 +76,8 @@ std::pair<int, bool> Call(ntdlib::sequence_export::UserProcedureModel& model, ui
 }
 
 // A conversion's model draws from the constructor's state: 1, then 0, for slot 5 and a count of 3, as fn_103b80 and
-// fn_479c60 do in runs of the games' code. A copy goes on from the state that it was copied in. Procedure 5 reads a
-// table that lies beside the archive. Without a handler, there's no model.
+// fn_479c60 do in runs of the games' code. A copy continues from the state that it was copied in. Procedure 5 reads a
+// table that is beside the archive. Without a handler, there's no model.
 void TestModels()
 {
     ntdlib::sequence_export::UserProcedureModel jamboree =
@@ -92,7 +91,7 @@ void TestModels()
     XSFLIB_CHECK(Call(superstars, 0, true, 5, 3) == std::pair(1, true) && Call(superstars, 0, false, 5, 3).first == 5);
     XSFLIB_CHECK(!hacsf2::ProcedureModel(bex::ProcedureHandler::kNone, "subarc_test.fsst"));
 
-    // Table 0 beside the archive: a map whose key "Value" holds 128 values, each 2 more than its index.
+    // Table 0 beside the archive: a map whose key "Value" contains 128 values, each 2 more than its index, up to 127.
     const std::filesystem::path folder = std::filesystem::temp_directory_path() / "hacsf2_procedures_test";
     std::filesystem::create_directories(folder);
     std::vector<uint8_t> file = {0x81, 0xa5, 'V', 'a', 'l', 'u', 'e', 0xdc, 0x00, 0x80};
@@ -100,16 +99,16 @@ void TestModels()
     {
         file.push_back(static_cast<uint8_t>(std::min(i + 2, 127)));
     }
-    std::ofstream(folder / "00.msgpack", std::ios::binary)
-        .write(reinterpret_cast<const char*>(file.data()), static_cast<std::streamsize>(file.size()));
+
+    XSFLIB_CHECK(!xsflib::WriteFile(folder / "00.msgpack", file));
     ntdlib::sequence_export::UserProcedureModel with_table =
         hacsf2::ProcedureModel(bex::ProcedureHandler::kJamboree, folder / "subarc_test.fsst");
     XSFLIB_CHECK(Call(with_table, 5, false, 7, 0) == std::pair(9, false));
     std::filesystem::remove_all(folder);
 }
 
-// Every sound archive under `folder` is one of the table's for `handler`, and the folder holds every archive that the
-// table lists for it.
+// Every sound archive under `folder` is one of the table's for `handler`, and the folder contains every archive that
+// the table lists for it.
 void TestGameFiles(bex::ProcedureHandler handler, const std::filesystem::path& folder)
 {
     std::set<std::pair<std::size_t, std::string>> found;
@@ -129,6 +128,7 @@ void TestGameFiles(bex::ProcedureHandler handler, const std::filesystem::path& f
             Check(false, xsflib::Utf8(entry.path()) + " is recognized");
             continue;
         }
+
         found.insert({bytes->size(), xsflib::Sha1::Hex(xsflib::Sha1::Of(*bytes))});
     }
 

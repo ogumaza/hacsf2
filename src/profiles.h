@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 
-// The conversions of a sound archive's sequences in the states that a game's code gives them (ntdlib/sar/game_rules.h).
-// A game's code may turn tracks of a piece down as the piece plays, through the sound's handle (nn::atk's
-// SetTrackVolume, with volume 0). It may put a reverb on aux bus B while a sound plays. A conversion of such a sound
-// plays it in the state that the game starts it in. Each later state gets a conversion too, under the sound's name, a
-// space and the state's name.
+// The conversions of the sequences of a sound archive in the states that the game's code puts them in
+// (ntdlib/sar/game_rules.h). A game's code may turn tracks of a piece down as the piece plays, through the sound's
+// handle (nn::atk's SetTrackVolume, with volume 0). It may put a reverb on aux bus B while a sound plays. A conversion
+// of such a sound plays it in the state that the game starts it in. Each later state gets a conversion too, under the
+// sound's name, a space and the state's name.
 
 #pragma once
 
@@ -34,8 +34,8 @@ uint32_t SoundOf(std::size_t index);
 std::size_t StateOf(std::size_t index);
 
 // `perform` for state `state` of the sound named `name` under `rules`: without the tracks that the state turns down
-// (PerformOptions::tracks), and with the dry gain of the state's reverb on aux bus B (PerformOptions::bus_reverbs). An
-// archive with rules also takes their delay on aux bus A (PerformOptions::bus_a_delay).
+// (PerformOptions::tracks), and with the dry gain of the state's reverb on aux bus B (PerformOptions::bus_reverbs). For
+// an archive with rules, it also copies from the rules whether aux bus A has a delay (PerformOptions::bus_a_delay).
 ntdlib::sequence_export::PerformOptions InState(const ntdlib::sequence_export::PerformOptions& perform,
                                                 const ntdlib::sar::ArchiveRules& rules, std::string_view name,
                                                 std::size_t state);

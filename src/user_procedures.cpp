@@ -22,8 +22,8 @@ namespace
 namespace bex = ntdlib::nx::bex;
 namespace se = ntdlib::sequence_export;
 
-// The file of table `number` of Jamboree's procedure 5, or nothing: beside the archive at `input`, or where the game's
-// folders hold it for an archive in audio/sounddata/<name>/ or in _Resident/.
+// The file of table `number` of Jamboree's procedure 5, or nothing: beside the archive at `input`, or where the folders
+// of the game contain it for an archive in audio/sounddata/<name>/ or in _Resident/.
 std::optional<std::filesystem::path> TableFile(const std::filesystem::path& input, uint32_t number)
 {
     const std::string name = std::string(number < 10 ? "0" : "") + std::to_string(number) + ".msgpack";
@@ -58,6 +58,7 @@ bex::ProcedureHandler ProcedureHandlerOf(std::span<const uint8_t> archive)
         {
             sha1 = xsflib::Sha1::Hex(xsflib::Sha1::Of(archive));
         }
+
         if (sha1 == a.sha1)
         {
             return a.handler;
@@ -101,7 +102,7 @@ se::UserProcedureModel ProcedureModel(bex::ProcedureHandler handler, const std::
         }
     }
 
-    // Each copy of the function holds its state. A conversion therefore starts from the handler's first state.
+    // Each copy of the function keeps its state. A conversion therefore starts from the handler's first state.
     return [model](uint16_t procedure, std::span<int16_t, 16> local, std::span<int16_t, 16> global,
                    std::span<int16_t, 16> track) mutable
     {

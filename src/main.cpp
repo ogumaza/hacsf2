@@ -4,7 +4,7 @@
 //
 //     hacsf2 [options] <archive.bfsar> [<archive.bfsar> ...]
 //
-// Output goes beside each archive. Windows accepts files dropped on the executable; macOS uses Hacsf2.app.
+// The output is written beside each archive. Windows accepts files dropped on the executable; macOS uses Hacsf2.app.
 
 #include <cstddef>
 #include <cstdint>
@@ -41,10 +41,10 @@ namespace
 
 namespace se = ntdlib::sequence_export;
 
-// An archive that hacsf2 converts, its game's rules (profiles.h), the pieces that wait for values that the game gives
-// them (rhythm_pieces.h), and the conversions of the pieces that follow the stream under them (synced_pieces.h). The
-// rhythm pieces' controller is sound `controller` of this archive, or of `controller_archive` when another archive
-// holds it, or nothing when no archive beside this one does.
+// An archive that hacsf2 converts, the rules of its game (profiles.h), the pieces that wait for values from the game's
+// code (rhythm_pieces.h), and the conversions of the pieces that follow the stream under them (synced_pieces.h). The
+// controller of the rhythm pieces is sound `controller` of this archive, or of `controller_archive` when another
+// archive contains it. It is nothing when no archive beside this one contains it.
 struct Input
 {
     ntdlib::sar::SoundArchive archive;
@@ -95,8 +95,8 @@ std::optional<Input> OpenInput(const std::filesystem::path& input, const std::st
     std::vector<hacsf2::SyncedSequence> synced = hacsf2::FindSyncedSequences(input, *archive);
     Input opened{.archive = std::move(*archive), .rules = rules, .rhythm = rhythm, .synced = std::move(synced)};
 
-    // A rhythm piece converts beside its mode's controller, from this archive or from the archive near it that the
-    // game holds it in.
+    // A rhythm piece converts beside the controller of its mode. The controller comes from this archive, or from the
+    // archive near it that contains the controller in the game's files.
     if (!rhythm.pieces.empty())
     {
         const std::string controller(rhythm.controller.label);
@@ -180,8 +180,8 @@ se::Conversion ConvertInput(const Input& input, std::size_t index, const se::Per
                             const se::ArchiveConverter<ntdlib::sar::SoundArchive>& c,
                             const ntdlib::bezel::SoundLevels& levels)
 {
-    // A synced conversion's index follows the archive's sounds (WithSyncedSequences). A later state's index holds the
-    // state's number above the sound's (WithStates).
+    // The index of a synced conversion follows the sounds of the archive (WithSyncedSequences). The index of a later
+    // state contains the number of the state in the bits above the sound index (WithStates).
     const std::size_t sounds = input.archive.Sounds().size();
     if (hacsf2::StateOf(index) == 0 && index >= sounds)
     {
@@ -199,7 +199,7 @@ se::Conversion ConvertInput(const Input& input, std::size_t index, const se::Per
     in_state.volume = levels.LevelOf(name);
 
     // A rhythm piece plays beside its mode's controller. Without the controller, or when the controller doesn't hand
-    // over to it, the piece converts alone, with the values that the controller would give it.
+    // over to it, the piece converts alone, with the values that the controller would set.
     std::string alone;
     if (std::optional<se::Conversion> beside = ConvertBesideController(input, sound, in_state, c, levels, alone))
     {
@@ -211,7 +211,6 @@ se::Conversion ConvertInput(const Input& input, std::size_t index, const se::Per
     {
         return se::ConvertSequence(input.archive, sound, options, c.settings, c.program);
     };
-
     se::Conversion converted = hacsf2::ConvertSounding(convert, in_state, ntdlib::sar::StartsOf(*input.rules, name));
     if (!alone.empty())
     {
@@ -221,12 +220,13 @@ se::Conversion ConvertInput(const Input& input, std::size_t index, const se::Per
     return converted;
 }
 
-// The frame's converter of `archive_converter`'s archives, with a conversion for each state of a sound. A piece that
-// follows the beat and the chords of the stream under it converts once for each stream whose files lie beside the
-// archive, in place of its plain conversion. The sequences of the two games whose handlers of user procedures hacsf2
-// runs (user_procedures.h) convert with the game's handler. A Bezel Engine game's sounds convert at the levels of its
-// sound sheets, from the folder `sheets`, or from a Data/SheetBin folder near the archive when `sheets` is empty. Each
-// input's levels go to `levels`. `archive_converter`, `sheets` and `levels` have to outlive the converter.
+// The converter that the frame runs on the archives of `archive_converter`, with a conversion for each state of a
+// sound. A piece that follows the beat and the chords of the stream under it converts once for each stream whose files
+// are beside the archive, in place of its plain conversion. The sequences of the two games whose handlers of user
+// procedures hacsf2 runs (user_procedures.h) convert with the handler of the game. The sounds of a Bezel Engine game
+// convert at the levels in its sound sheets, from the folder `sheets`, or from a Data/SheetBin folder near the archive
+// when `sheets` is empty. The levels of each input are written to `levels`. `archive_converter`, `sheets` and `levels`
+// have to outlive the converter.
 se::Converter<se::PerformOptions, Input, se::Conversion> MakeConverter(
     const se::ArchiveConverter<ntdlib::sar::SoundArchive>& archive_converter, const std::filesystem::path& sheets,
     ntdlib::bezel::SoundLevels& levels)
@@ -279,7 +279,7 @@ int main(int argc, char** argv)
     archive_converter.settings = se::SwitchSettings();
     archive_converter.group_files = true;
 
-    // A Bezel Engine game gives its sounds levels in its sound sheets, outside the sound archive.
+    // A Bezel Engine game sets the levels of its sounds in its sound sheets, outside the sound archive.
     std::filesystem::path sheets;
     archive_converter.extra_options =
         "  --sheets DIR   read the levels of a Bezel Engine game's sounds from the sound\n"

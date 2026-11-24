@@ -2,7 +2,7 @@
 
 // The pieces that follow the beat and the chords of the stream under them (ntdlib/nx/bex/music_sync.h). Super Mario
 // Party Jamboree's star melody plays over a board's stream, and reads the stream's beat and chord through user
-// procedures 2 to 4. hacsf2 converts such a piece once for each stream whose files lie beside the archive.
+// procedures 2 to 4. hacsf2 converts such a piece once for each stream whose files are beside the archive.
 
 #pragma once
 
@@ -28,9 +28,9 @@ struct SyncedSequence
 };
 
 // The conversions of the synced pieces in `archive`, the archive at `input`: one for each stream whose file and jump
-// setting lie beside the archive, under the names that the game's files give them. The piece starts with the stream.
-// Its writes cover one pass over the stream's regions in the order of the jump setting, then the loop once more. Warns
-// about a stream whose file or jump setting is damaged.
+// setting are beside the archive, under the names in the game's files. The piece starts with the stream. Its writes
+// cover one pass over the stream's regions in the order of the jump setting, then the loop once more. Warns about a
+// stream whose file or jump setting is damaged.
 std::vector<SyncedSequence> FindSyncedSequences(const std::filesystem::path& input,
                                                 const ntdlib::sar::SoundArchive& archive);
 
